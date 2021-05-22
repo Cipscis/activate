@@ -1,8 +1,9 @@
 {
-	"name": "base-project",
-	"version": "1.0.0",
-	"description": "This is my base project to use when creating new projects.",
+	"name": "activate",
+	"version": "0.1.0",
+	"description": "Click event listener helpers that maintain button-like keyboard behaviour for all elements",
 	"private": true,
+	"browser": "./activate.js",
 	"scripts": {
 		"server": "node server/server.js",
 		"watch": "gulp",
