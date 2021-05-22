@@ -1,4 +1,4 @@
-/* Activate 1.0.0 */
+/* Activate 1.0.1 */
 
 // Binds event listeners to one or more elements that makes them behave
 // like buttons, detecting both "click" events and also keydown for
@@ -48,10 +48,10 @@ const { activate, deactivate } = (function () {
 				}
 			}
 
-			if (nodes.length) {
+			if (nodes instanceof Node) {
+				activate(nodes, fn);
+			} else if (nodes.length && nodes.forEach) {
 				nodes.forEach((node) => activator(node, fn));
-			} else if (nodes instanceof Node) {
-				activator(nodes, fn);
 			}
 		},
 
