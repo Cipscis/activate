@@ -1,6 +1,6 @@
 {
 	"name": "activate",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "Click event listener helpers that maintain button-like keyboard behaviour for all elements",
 	"private": true,
 	"browser": "./activate.js",
