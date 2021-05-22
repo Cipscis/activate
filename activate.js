@@ -49,7 +49,7 @@ const { activate, deactivate } = (function () {
 			}
 
 			if (nodes instanceof Node) {
-				activate(nodes, fn);
+				activator(nodes, fn);
 			} else if (nodes.length && nodes.forEach) {
 				nodes.forEach((node) => activator(node, fn));
 			}
