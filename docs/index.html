@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Activate</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+	<link rel="stylesheet" href="/activate/assets/css/main.css" />
+	<script type="module" src="/activate/assets/js/dist/bundle.js"></script>
+</head>
+<body>
+	<main class="layout">
+		<section>
+			<div class="content">
+				<h1>Activate 1.0.2</h1>
+
+				<p><a href="changelog">Changelog</a></p>
+
+				<p>This is a method for binding accessible activation events, for elements that should act like buttons. These events will be fired when an element is clicked (or tapped, on touch devices), or when the <kbd>enter</kbd> key is pressed down or the <kbd>spacebar</kbd> key is released while the element has focus.</p>
+
+				<p>This emulates how browsers natively apply click events to <code>&lt;button&gt;</code> elements.</p>
+
+				<p>Though <code>activate</code> binds keyboard events, it will not force an element to become keyboard focusable. If you bind an event to an element that is not natively focusable, make sure it has a <code>tabindex="0"</code> attribute so it can receive keyboard focus.</p>
+			</div>
+		</section>
+
+		<section>
+			<div class="content">
+				<h2>Activate</h2>
+
+				<code>activate(nodes, fn)</code>
+
+				<p>Binds the function <code>fn</code> to a click event to the node or nodes passed through in the <code>nodes</code> argument. Similarly to <code>addEventListener</code>, <code>activate</code> will not bind multiple instance of the same function to the same element.</p>
+
+				<p>In addition to the click event, <code>activate</code> will also bind additional key events based on each node's type.</p>
+
+				<p>Most elements will have <kbd>enter</kbd> keydown events and <kbd>spacebar</kbd> keyup events bound to them.</p>
+
+				<p><code>&lt;a&gt;</code> elements already natively accept <kbd>enter</kbd> keydowns as a click event natively. Unlike other elements, holding down <kbd>enter</kbd> while focus is on an <code>&lt;a&gt;</code> element will only cause the click event to fire once.</p>
+
+				<p><code>&lt;button&gt;</code> elements don't need any additional events to be bound, as they already accept <kbd>enter</kbd> and <kbd>spacebar</kbd> key events as clicks natively.</p>
+
+				<p><code>activate</code> will also prevent the default action of <kbd>spacebar</kbd> in order to stop the page scrolling, except for some elements that don't treat this as the default action. The elements excluded from this are <code>&lt;button&gt;</code>, <code>&lt;input&gt;</code>, and <code>&lt;textarea&gt;</code></p>
+
+				<h3>Arguments</h3>
+
+				<h4>nodes</h4>
+
+				<p>This argument can be passed in any of four forms:</p>
+
+				<ul>
+					<li><code>NodeList</code></li>
+					<li><code>Node</code></li>
+					<li><code>string</code> (must be a valid CSS selector)</li>
+					<li><code>Array</code> of <code>Node</code> elements (not recommended, will throw errors if the array contains non-<code>Node</code> elements)</li>
+				</ul>
+
+				<h4>fn</h4>
+
+				<p>A function to be bound to the click and keyboard events.</p>
+
+				<h3>Examples</h3>
+
+				<h4>Binding with a NodeList</h4>
+
+				<p><code>activate</code> can be used with <code>NodeList</code> objects, such as those returned by <code>document.querySelectorAll</code>:</p>
+
+				<button class="button activate-button js-activate-nodelist" data-activate-count="0">Nodelist A</button>
+				<button class="button activate-button js-activate-nodelist" data-activate-count="0">Nodelist B</button>
+
+				<h4>Binding with a Node</h4>
+
+				<p><code>activate</code> can be used with <code>Node</code> object directly, such as those returned by <code>document.querySelector</code>:</p>
+
+				<button class="button activate-button js-activate-node" data-activate-count="0">Node</button>
+
+				<h4>Binding with a string</h4>
+
+				<p><code>activate</code> can be used with any valid CSS selector string:</p>
+
+				<button class="button activate-button js-activate-string" data-activate-count="0">string</button>
+
+				<h4>Common element types</h4>
+
+				<p>Try activating each of these elements with a click, and with the <kbd>enter</kbd> and <kbd>spacebar</kbd> keys:</p>
+
+				<span class="button activate-button js-activate-types" tabindex="0" data-activate-count="0">span</span>
+
+				<a href="#" class="button activate-button js-activate-types" tabindex="0" data-activate-count="0">a</a>
+
+				<button class="button activate-button js-activate-types" tabindex="0" data-activate-count="0">button</button>
+			</div>
+		</section>
+
+		<section>
+			<div class="content">
+				<h2>Deactivate</h2>
+
+				<code>deactivate(nodes, fn)</code>
+
+				<p>Unbinds a function found by <code>activate</code>.</p>
+
+				<p><code>deactivate</code> takes the same arguments as <code>activate</code>.</p>
+
+				<h3>Examples</h3>
+
+				<p>
+					<button class="button js-deactivate-on">activate</button>
+					<button class="button js-deactivate-off">deactivate</button>
+				</p>
+
+				<p>
+					<button class="button activate-button js-deactivate-counter" data-activate-count="0">Button</button>
+				</p>
+			</div>
+		</section>
+	</main>
+</body>
+
+</html>
