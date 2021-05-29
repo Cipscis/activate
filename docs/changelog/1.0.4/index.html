@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Activate 1.0.2</title>
+	<title>Activate 1.0.4</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 	<link rel="stylesheet" href="/activate/assets/css/main.css" />
@@ -9,11 +9,11 @@
 <body>
 	<main class="layout">
 		<div class="content">
-			<h1>Activate 1.0.2 - Fixed accidental infinite recursion</h1>
+			<h1>Activate 1.0.4 - Adjusted build system</h1>
 
 			<p><a href="../">Back to changelog</a></p>
 
-			<p>In Activate 1.0.1, a typo caused an infinite recursion error when using <code>activate</code> with a <code>Node</code>. That typo was fixed in this version.</p>
+			<p>This patch fixed an error in the build system, and reconfigured the type of sourcemaps generated during development mode.</p>
 
 			<section id="breaking">
 				<h2>Breaking changes</h2>
@@ -26,7 +26,7 @@
 				<h2>Non-breaking changes</h2>
 
 				<ul>
-					<li>Fixed typo that was causing infinite recursion error</li>
+					<li>Fixed incorrect break statement in Webpack config, and set development mode Webpack <a href="https://webpack.js.org/configuration/devtool/" target="_blank">devtool</a> to <code>'eval-source-map'</code>.</li>
 				</ul>
 			</section>
 		</div>
