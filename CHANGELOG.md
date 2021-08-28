@@ -1,28 +1,46 @@
-# How to use
-
-*Delete this section when you first update this file.*
-
-Whenever you update your package, you should create a new version. And important part of this is documenting changes you have made in a human-readable way. This file provides a convenient place for tracking changes.
-
-See [https://keepachangelog.com/en/](keepachangelog.com) for a good guide on how to write a change log.
-
-Change log entries should have a version number, a date, and subsections detailing changes of each of these types:
-
-* `Added`
-* `Changed`
-* `Deprecated`
-* `Removed`
-* `Fixed`
-* `Security`
-
----
-
 # Activate Changelog
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - YYYY-MM-DD
+## [2.0.0] - 2021-08-29
 
 ### Added
 
-* Initial commit
+* Added `ActivateEventListener` as a new exported interface for TypeScript projects.
+
+### Changed
+
+* Refactored to work with `HTMLElement` instead of `Node`.
+* Updated build system.
+* Converted to TypeScript.
+* Published on npm
+
+## [1.0.4] - 2021-05-29
+
+### Changed
+
+* Updated build system.
+
+## [1.0.3] - 2021-05-26
+
+### Changed
+
+* Restructured documentation.
+
+## [1.0.2] - 2021-05-23
+
+### Changed
+
+* Version bump only.
+
+## [1.0.1] - 2021-05-23
+
+### Fixed
+
+* Fixed an issue with `activate` dealing incorrectly with some argument types.
+
+## [1.0.0] - 2021-05-23
+
+### Added
+
+* Initial release
