@@ -5,108 +5,107 @@
 // the "Enter" key and keyup for the "Space" key.
 
 // Example usage:
-// activate(nodeList, fn);
-// activate(singleNode, fn);
+// activate(nodeListOfElements, fn);
+// activate(singleElement, fn);
 // activate(selector, fn);
 
-const boundEvents = [];
-/*
-[
-	{
-		node: Node,
-		bindings: [
-			{
-				fn: Function,
-				spacebarFn: Function,
-				enterFn: Function
-			}
-		]
-	}
-]
-*/
-
-function activate(nodes, fn) {
-	_activator(nodes, fn, _activateSingle);
+interface ActivateBinding {
+	spacebarFn?: (this: HTMLElement, e: KeyboardEvent) => void;
+	enterFn?: (this: HTMLElement, e: KeyboardEvent) => void;
 }
 
-function deactivate(nodes, fn) {
-	_activator(nodes, fn, _deactivateSingle);
+interface ActivateEventListener {
+	(this: HTMLElement, e: KeyboardEvent | MouseEvent): void
 }
 
-function _activator(nodes, fn, activator) {
+interface Activator {
+	(element: HTMLElement, fn: ActivateEventListener): void;
+}
+
+const boundEvents: Map<HTMLElement, Map<ActivateEventListener, ActivateBinding>> = new Map();
+
+function activate(elements: string | HTMLElement | NodeListOf<HTMLElement>, fn: ActivateEventListener) {
+	_activator(elements, fn, _activateSingle);
+}
+
+function deactivate(elements: string | HTMLElement | NodeListOf<HTMLElement>, fn: ActivateEventListener) {
+	_activator(elements, fn, _deactivateSingle);
+}
+
+function _activator(elements: string | HTMLElement | NodeListOf<HTMLElement>, fn: ActivateEventListener, activator: Activator): void {
 	// Share the same initial logic between activate and deactivate,
-	// but run a different function over each node
+	// but run a different function over each element
 
-	if (typeof nodes === 'string') {
+	if (typeof elements === 'string') {
 		try {
-			nodes = document.querySelectorAll(nodes);
+			elements = document.querySelectorAll(elements);
 		} catch (e) {
 			let method = activator === _deactivateSingle ? 'deactivate' : 'activate';
-			throw new DOMException(`${method} failed because it was passed an invalid selector string: '${nodes}'`);
+			throw new DOMException(`${method} failed because it was passed an invalid selector string: '${elements}'`);
 		}
 	}
 
-	if (nodes instanceof Node) {
-		activator(nodes, fn);
-	} else if (nodes.length && nodes.forEach) {
-		nodes.forEach((node) => activator(node, fn));
+	if (elements instanceof HTMLElement) {
+		activator(elements, fn);
+	} else if (elements.length && elements.forEach) {
+		elements.forEach((element) => activator(element, fn));
 	}
 }
 
-function _activateSingle(node, fn) {
-	if ((node instanceof Node === false)) {
-		throw new TypeError(`activate failed because a valid Node was not passed`);
+function _activateSingle(element: HTMLElement, fn: ActivateEventListener) {
+	if ((element instanceof HTMLElement === false)) {
+		throw new TypeError(`activate failed because a valid HTMLElement was not passed`);
 	}
 
-	if (_getNodeBindings(node, fn)) {
+	if (_getElementBindings(element, fn)) {
 		// Like addEventListener, don't try to rebind new copies of the same events
 		return;
 	}
 
 	// All nodes should bind the click event
-	node.addEventListener('click', fn);
+	element.addEventListener('click', fn);
 
 	// Buttons will already treat keyboard events like clicks,
-	// so only bind them to other node types
-	let isButton = _isNodeType(node, 'button');
-	if (isButton === false) {
-		if (_getNodeHasBindings(node) === false) {
+	// so only bind them to other element types
+	if (!(element instanceof HTMLButtonElement)) {
+		if (_getElementHasBindings(element) === false) {
 			// addEventListener would prevent this event being
 			// bound multiple times, but be explicit that it is
-			// only bound if the node has no other events bound
-			node.addEventListener('keydown', _preventSpacebarScroll);
+			// only bound if the element has no other events bound
+			element.addEventListener('keydown', _preventSpacebarScroll);
 		}
 
-		let spacebarFn = _makeSpacebarFn(fn);
-		node.addEventListener('keyup', spacebarFn);
-		let bindings = {
+		const spacebarFn = _makeSpacebarFn(fn);
+		element.addEventListener('keyup', spacebarFn);
+
+		const bindings: ActivateBinding = {
 			spacebarFn
 		};
 
 		// Links already treat "enter" keydown like a click
-		let isLink = _isNodeType(node, 'a');
-		if (isLink === false) {
+		if (!(element instanceof HTMLAnchorElement)) {
 			// Note that holding down "enter" will behave differently
 			// for links in that it will only fire once, whereas for
 			// non-links, including buttons, it will fire multiple times
-			let enterFn = _makeEnterFn(fn);
-			node.addEventListener('keydown', enterFn);
+			const enterFn = _makeEnterFn(fn);
+			element.addEventListener('keydown', enterFn);
+
 			bindings.enterFn = enterFn;
 		}
 
-		_rememberNodeBindings(node, fn, bindings);
+		_rememberElementBindings(element, fn, bindings);
 	}
 }
 
-function _deactivateSingle(node, fn) {
-	if ((node instanceof Node === false)) {
-		throw new TypeError(`deactivate failed because a valid Node was not passed`);
+function _deactivateSingle(element: HTMLElement, fn: ActivateEventListener) {
+	if ((element instanceof HTMLElement === false)) {
+		throw new TypeError(`deactivate failed because a valid HTMLElement was not passed`);
 	}
 
-	let bindings = _getNodeBindings(node, fn);
+	let bindings = _getElementBindings(element, fn);
 
-	// All nodes have had a click event bound
-	node.removeEventListener('click', fn);
+	// All elements have had a click event bound
+	element.removeEventListener('click', fn);
 
 	if (!bindings) {
 		// No other events to unbind
@@ -115,140 +114,120 @@ function _deactivateSingle(node, fn) {
 
 	// Buttons will already treat keyboard events like clicks,
 	// so they didn't have keyboard events bound to them
-	let isButton = _isNodeType(node, 'button');
-	if (isButton === false) {
-		node.removeEventListener('keyup', bindings.spacebarFn);
+	if (!(element instanceof HTMLButtonElement)) {
+		if (bindings.spacebarFn) {
+			element.removeEventListener('keyup', bindings.spacebarFn);
+		}
 
 		// Links already treat "enter" keydown like a click,
 		// so that event wasn't bound to them
-		let isLink = _isNodeType(node, 'a');
-		if (isLink === false) {
-			node.removeEventListener('keydown', bindings.enterFn);
+		if (!(element instanceof HTMLAnchorElement)) {
+			if (bindings.enterFn) {
+				element.removeEventListener('keydown', bindings.enterFn);
+			}
 		}
 
-		_forgetNodeBindings(node, fn);
+		_forgetElementBindings(element, fn);
 
-		if (_getNodeHasBindings(node) === false) {
-			// Only unbind this event if the node has no other bindings
-			node.removeEventListener('keydown', _preventSpacebarScroll);
+		if (_getElementHasBindings(element) === false) {
+			// Only unbind this event if the element has no other bindings
+			if (_preventSpacebarScroll) {
+				if (_preventSpacebarScroll) {
+					element.removeEventListener('keydown', _preventSpacebarScroll);
+				}
+			}
 		}
 	}
 }
 
-function _rememberNodeBindings(node, fn, bindings) {
-	let nodeB = boundEvents.find(el => el.node === node);
-	if (!nodeB) {
-		nodeB = {
-			node: node,
-			bindings: [
-				{
-					fn
-				}
-			]
-		};
-		boundEvents.push(nodeB);
+function _rememberElementBindings(element: HTMLElement, fn: ActivateEventListener, bindings: ActivateBinding) {
+	let elementB = boundEvents.get(element);
+
+	if (!elementB) {
+		elementB = new Map([[fn, bindings]]);
+		boundEvents.set(element, elementB);
 	}
 
-	let fnB = nodeB.bindings.find(el => el.fn === fn);
+	let fnB = elementB.get(fn);
 	if (!fnB) {
-		fnB = {
-			fn
-		};
-		nodeB.bindings.push(fnB);
+		fnB = {};
+		elementB.set(fn, fnB);
 	}
 
 	Object.assign(fnB, bindings);
 }
 
-function _forgetNodeBindings(node, fn) {
-	let nodeB = boundEvents.find(el => el.node === node);
-	if (!nodeB) {
+function _forgetElementBindings(element: HTMLElement, fn: ActivateEventListener) {
+	const elementB = boundEvents.get(element);
+	if (!elementB) {
 		return;
 	}
 
-	let fnB = nodeB.bindings.find(el => el.fn === fn);
-	if (!fnB) {
-		return;
-	}
-
-	let fnBIndex = nodeB.bindings.indexOf(fnB);
-
-	nodeB.bindings.splice(fnBIndex, 1);
+	elementB.delete(fn);
+	boundEvents.delete(element);
 }
 
-function _getNodeBindings(node, fn) {
-	let nodeB = boundEvents.find(el => el.node === node);
-	if (!nodeB) {
+function _getElementBindings(element: HTMLElement, fn: ActivateEventListener) {
+	const elementB = boundEvents.get(element);
+
+	if (!elementB) {
 		return undefined;
 	}
 
-	let fnB = nodeB.bindings.find(el => el.fn === fn);
-	if (!fnB) {
-		return undefined;
-	}
+	const fnB = elementB.get(fn);
 
 	return fnB;
 }
 
-function _getNodeHasBindings(node) {
-	let nodeB = boundEvents.find(el => el.node === node);
-	return !!nodeB;
+function _getElementHasBindings(element: HTMLElement) {
+	return boundEvents.has(element);
 }
 
-function _makeEnterFn(fn) {
-	return function (e) {
-		let isEnter = _isEnter(e);
+function _makeEnterFn(fn: ActivateEventListener) {
+	return function (this: HTMLElement, e: KeyboardEvent) {
+		const isEnter = _isEnter(e);
 
 		if (isEnter) {
-			fn.apply(this, arguments);
+			fn.call(this, e);
 		}
 	};
 }
 
-function _isEnter(e) {
-	let isEnter = e.key && (e.key.toLowerCase() === 'enter');
+function _isEnter(e: KeyboardEvent) {
+	const isEnter = !!(e.key && (e.key.toLowerCase() === 'enter'));
 
 	return isEnter;
 }
 
-function _preventSpacebarScroll(e) {
+function _preventSpacebarScroll(e: KeyboardEvent) {
 	// Prevent spacebar from scrolling the page down on keydown
-	let node = e.target;
+	const element = e.target;
 
-	let isButton = _isNodeType(node, 'button');
-	let isInput = _isNodeType(node, 'input', 'textarea');
+	const isButton = element instanceof HTMLButtonElement;
+	const isInput = element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement;
 
-	let isSpacebar = _isSpacebar(e);
+	const isSpacebar = _isSpacebar(e);
 
 	if (!isButton && !isInput && isSpacebar) {
 		e.preventDefault();
 	}
 }
 
-function _makeSpacebarFn(fn) {
-	return function (e) {
-		let isSpacebar = _isSpacebar(e);
+function _makeSpacebarFn(fn: ActivateEventListener) {
+	return function (this: HTMLElement, e: KeyboardEvent) {
+		const isSpacebar = _isSpacebar(e);
 
 		if (isSpacebar) {
-			fn.apply(this, arguments);
+			fn.call(this, e);
 		}
 	};
 }
 
-function _isSpacebar(e) {
+function _isSpacebar(e: KeyboardEvent) {
 	// IE11 uses 'spacebar' instead of ' '
-	let isSpacebar = e.key && (e.key === ' ' || e.key.toLowerCase() === 'spacebar');
+	const isSpacebar = !!(e.key && (e.key === ' ' || e.key.toLowerCase() === 'spacebar'));
 
 	return isSpacebar;
-}
-
-function _isNodeType(node, ...nodeTypes) {
-	nodeTypes = nodeTypes.map(el => el.toLowerCase());
-
-	let nodeType = node.nodeName.toLowerCase();
-	let isOfType = nodeTypes.includes(nodeType);
-
-	return isOfType;
 }
 
 export { activate, deactivate };

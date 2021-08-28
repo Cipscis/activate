@@ -27,11 +27,11 @@
 			<div class="content">
 				<h2>Activate</h2>
 
-				<code>activate(nodes, fn)</code>
+				<code>activate(elementss, fn)</code>
 
-				<p>Binds the function <code>fn</code> to a click event to the node or nodes passed through in the <code>nodes</code> argument. Similarly to <code>addEventListener</code>, <code>activate</code> will not bind multiple instance of the same function to the same element.</p>
+				<p>Binds the function <code>fn</code> to a click event to the element or elements passed through in the <code>elements</code> argument. Similarly to <code>addEventListener</code>, <code>activate</code> will not bind multiple instance of the same function to the same element.</p>
 
-				<p>In addition to the click event, <code>activate</code> will also bind additional key events based on each node's type.</p>
+				<p>In addition to the click event, <code>activate</code> will also bind additional key events based on each element's type.</p>
 
 				<p>Most elements will have <kbd>enter</kbd> keydown events and <kbd>spacebar</kbd> keyup events bound to them.</p>
 
@@ -43,15 +43,15 @@
 
 				<h3>Arguments</h3>
 
-				<h4>nodes</h4>
+				<h4>elements</h4>
 
 				<p>This argument can be passed in any of four forms:</p>
 
 				<ul>
-					<li><code>NodeList</code></li>
-					<li><code>Node</code></li>
+					<li><code>NodeListOf&lt;HTMLElement&gt;</code></li>
+					<li><code>HTMLElement</code></li>
 					<li><code>string</code> (must be a valid CSS selector)</li>
-					<li><code>Array</code> of <code>Node</code> elements (not recommended, will throw errors if the array contains non-<code>Node</code> elements)</li>
+					<li><code>Array</code> of <code>HTMLElement</code> elements (not recommended, will throw errors if the array contains non-<code>HTMLElement</code> elements)</li>
 				</ul>
 
 				<h4>fn</h4>
@@ -64,14 +64,14 @@
 
 				<p><code>activate</code> can be used with <code>NodeList</code> objects, such as those returned by <code>document.querySelectorAll</code>:</p>
 
-				<button class="button activate-button js-activate-nodelist" data-activate-count="0">Nodelist A</button>
-				<button class="button activate-button js-activate-nodelist" data-activate-count="0">Nodelist B</button>
+				<button class="button activate-button js-activate-nodelist" data-activate-count="0">NodeList A</button>
+				<button class="button activate-button js-activate-nodelist" data-activate-count="0">NodeList B</button>
 
-				<h4>Binding with a Node</h4>
+				<h4>Binding with an HTMLElement</h4>
 
-				<p><code>activate</code> can be used with <code>Node</code> object directly, such as those returned by <code>document.querySelector</code>:</p>
+				<p><code>activate</code> can be used with <code>HTMLElement</code> object directly, such as those returned by <code>document.querySelector</code>:</p>
 
-				<button class="button activate-button js-activate-node" data-activate-count="0">Node</button>
+				<button class="button activate-button js-activate-element" data-activate-count="0">HTMLElement</button>
 
 				<h4>Binding with a string</h4>
 
@@ -95,7 +95,7 @@
 			<div class="content">
 				<h2>Deactivate</h2>
 
-				<code>deactivate(nodes, fn)</code>
+				<code>deactivate(elements, fn)</code>
 
 				<p>Unbinds a function found by <code>activate</code>.</p>
 
