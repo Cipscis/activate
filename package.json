@@ -1,25 +1,38 @@
 {
-	"name": "activate",
-	"version": "1.0.4",
+	"name": "@cipscis/activate",
+	"version": "2.0.0",
 	"description": "Click event listener helpers that maintain button-like keyboard behaviour for all elements",
-	"private": true,
-	"browser": "./activate.js",
+	"browser": "./dist/activate.js",
+	"type": "module",
 	"files": [
-		"activate.js"
+		"dist/**/*"
 	],
+	"types": "dist/activate.d.ts",
 	"scripts": {
 		"server": "node server/server.js",
+		"build": "gulp build",
 		"watch": "gulp",
-		"start": "concurrently --kill-others \"npm run server\" \"npm run watch\""
+		"start": "concurrently --kill-others \"npm run server\" \"npm run watch\"",
+		"prepare": "gulp clean && tsc"
 	},
 	"author": "Mark Hanna",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/cipscis/activate.git"
+	},
 	"license": "Hippocratic-2.1",
 	"devDependencies": {
-		"concurrently": "^6.1.0",
-		"dotenv": "^10.0.0",
-		"express": "^4.17.1",
 		"gulp": "^4.0.2",
-		"gulp-sass": "^4.1.0",
-		"webpack-stream": "^6.1.2"
+		"typescript": "^4.3.5",
+		"sass": "^1.34.1",
+		"gulp-sass": "^5.0.0",
+		"webpack": "^5.40.0",
+		"ts-loader": "^9.2.5",
+		"express": "^4.17.1",
+		"concurrently": "^6.1.0",
+		"dotenv": "^10.0.0"
+	},
+	"engines": {
+		"node": ">=14"
 	}
 }
