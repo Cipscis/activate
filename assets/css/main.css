@@ -1,0 +1,6 @@
+@import "https://cipscis.github.io/portfolio/assets/css/style.css";
+.activate-button::after {
+  content: attr(data-activate-count);
+  display: inline-block;
+  margin-left: 5px;
+}
