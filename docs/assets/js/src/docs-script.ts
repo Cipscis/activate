@@ -1,7 +1,7 @@
-// import { activate, deactivate } from '@cipscis/activate';
-import { activate, deactivate } from '../../../../dist/activate';
+import { activate, deactivate, ActivateEventListener } from '@cipscis/activate';
+// import { activate, deactivate, ActivateEventListener } from '../../../../src/activate';
 
-const increment = function (this: HTMLElement, e: KeyboardEvent | MouseEvent) {
+const increment: ActivateEventListener = function (this: HTMLElement, e: KeyboardEvent | MouseEvent) {
 	e.preventDefault();
 
 	const el = e.target as HTMLElement;

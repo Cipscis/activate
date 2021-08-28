@@ -1,38 +1,30 @@
-/* Activate 2.0.0 */
-
-// Binds event listeners to one or more elements that makes them behave
-// like buttons, detecting both "click" events and also keydown for
-// the "Enter" key and keyup for the "Space" key.
-
-// Example usage:
-// activate(nodeListOfElements, fn);
-// activate(singleElement, fn);
-// activate(selector, fn);
-
+/** A record of secondary bindings for a given element and primary binding pair. */
 interface ActivateBinding {
-	spacebarFn?: (this: HTMLElement, e: KeyboardEvent) => void;
-	enterFn?: (this: HTMLElement, e: KeyboardEvent) => void;
+	spacebarFn: (this: HTMLElement, e: KeyboardEvent) => any;
+	enterFn?: (this: HTMLElement, e: KeyboardEvent) => any;
 }
 
+/** An event listener that can accept keyboard or mouse events. */
 interface ActivateEventListener {
-	(this: HTMLElement, e: KeyboardEvent | MouseEvent): void
-}
-
-interface Activator {
-	(element: HTMLElement, fn: ActivateEventListener): void;
+	(this: HTMLElement, e: KeyboardEvent | MouseEvent): any
 }
 
 const boundEvents: Map<HTMLElement, Map<ActivateEventListener, ActivateBinding>> = new Map();
 
-function activate(elements: string | HTMLElement | NodeListOf<HTMLElement>, fn: ActivateEventListener) {
-	_activator(elements, fn, _activateSingle);
-}
-
-function deactivate(elements: string | HTMLElement | NodeListOf<HTMLElement>, fn: ActivateEventListener) {
-	_activator(elements, fn, _deactivateSingle);
-}
-
-function _activator(elements: string | HTMLElement | NodeListOf<HTMLElement>, fn: ActivateEventListener, activator: Activator): void {
+/**
+ * Handles the conversion of the elements parameter so the activator function only ever has to deal with single HTMLElements.
+ *
+ * @param {string | HTMLElement | NodeListOf<HTMLElement>} elements - A CSS selector string, HTMLElement, or NodeList of HTMLElements to be converted so the activator function is called once for each resulting HTMLElement.
+ * @param {ActivateEventListener} fn - The event listener to bind to each HTMLElement.
+ * @param {(element: HTMLElement, fn: ActivateEventListener) => void} activator - The function to link each HTMLElement to fn.
+ *
+ * @throws {DOMException} - If the elements argument is an invalid CSS selector string.
+ */
+function _activator(
+	elements: string | HTMLElement | NodeListOf<HTMLElement>,
+	fn: ActivateEventListener,
+	activator: (element: HTMLElement, fn: ActivateEventListener) => void,
+): void {
 	// Share the same initial logic between activate and deactivate,
 	// but run a different function over each element
 
@@ -40,20 +32,28 @@ function _activator(elements: string | HTMLElement | NodeListOf<HTMLElement>, fn
 		try {
 			elements = document.querySelectorAll(elements);
 		} catch (e) {
-			let method = activator === _deactivateSingle ? 'deactivate' : 'activate';
+			const method = activator === _deactivateSingle ? 'deactivate' : 'activate';
 			throw new DOMException(`${method} failed because it was passed an invalid selector string: '${elements}'`);
 		}
 	}
 
 	if (elements instanceof HTMLElement) {
 		activator(elements, fn);
-	} else if (elements.length && elements.forEach) {
+	} else {
 		elements.forEach((element) => activator(element, fn));
 	}
 }
 
-function _activateSingle(element: HTMLElement, fn: ActivateEventListener) {
-	if ((element instanceof HTMLElement === false)) {
+/**
+ * Binds fn to a single element.
+ *
+ * @param {HTMLElement} element
+ * @param {ActivateEventListener} fn
+ *
+ * @throws {TypeError} - element must be an HTMLElement.
+ */
+function _activateSingle(element: HTMLElement, fn: ActivateEventListener): void {
+	if (!(element instanceof HTMLElement)) {
 		throw new TypeError(`activate failed because a valid HTMLElement was not passed`);
 	}
 
@@ -97,16 +97,23 @@ function _activateSingle(element: HTMLElement, fn: ActivateEventListener) {
 	}
 }
 
-function _deactivateSingle(element: HTMLElement, fn: ActivateEventListener) {
-	if ((element instanceof HTMLElement === false)) {
+/**
+ * Unbinds fn from a single element.
+ *
+ * @param {HTMLElement} element
+ * @param {ActivateEventListener} fn
+ *
+ * @throws {TypeError} - element must be an HTMLElement.
+ */
+function _deactivateSingle(element: HTMLElement, fn: ActivateEventListener): void {
+	if (!(element instanceof HTMLElement)) {
 		throw new TypeError(`deactivate failed because a valid HTMLElement was not passed`);
 	}
-
-	let bindings = _getElementBindings(element, fn);
 
 	// All elements have had a click event bound
 	element.removeEventListener('click', fn);
 
+	const bindings = _getElementBindings(element, fn);
 	if (!bindings) {
 		// No other events to unbind
 		return;
@@ -131,16 +138,19 @@ function _deactivateSingle(element: HTMLElement, fn: ActivateEventListener) {
 
 		if (_getElementHasBindings(element) === false) {
 			// Only unbind this event if the element has no other bindings
-			if (_preventSpacebarScroll) {
-				if (_preventSpacebarScroll) {
-					element.removeEventListener('keydown', _preventSpacebarScroll);
-				}
-			}
+			element.removeEventListener('keydown', _preventSpacebarScroll);
 		}
 	}
 }
 
-function _rememberElementBindings(element: HTMLElement, fn: ActivateEventListener, bindings: ActivateBinding) {
+/**
+ * Record a new set of bindings for a particular element, associated with a new primary binding.
+ *
+ * @param {HTMLElement} element
+ * @param {ActivateEventListener} fn - The primary binding.
+ * @param {ActivateBinding} bindings - The secondary bindings.
+ */
+function _rememberElementBindings(element: HTMLElement, fn: ActivateEventListener, bindings: ActivateBinding): void {
 	let elementB = boundEvents.get(element);
 
 	if (!elementB) {
@@ -149,15 +159,21 @@ function _rememberElementBindings(element: HTMLElement, fn: ActivateEventListene
 	}
 
 	let fnB = elementB.get(fn);
-	if (!fnB) {
-		fnB = {};
+	if (fnB) {
+		Object.assign(fnB, bindings);
+	} else {
+		fnB = Object.assign({}, bindings);
 		elementB.set(fn, fnB);
 	}
-
-	Object.assign(fnB, bindings);
 }
 
-function _forgetElementBindings(element: HTMLElement, fn: ActivateEventListener) {
+/**
+ * Delete any records of bindings for a particular element and primary binding pair.
+ *
+ * @param {HTMLElement} element
+ * @param {ActivateEventListener} fn
+ */
+function _forgetElementBindings(element: HTMLElement, fn: ActivateEventListener): void {
 	const elementB = boundEvents.get(element);
 	if (!elementB) {
 		return;
@@ -167,7 +183,13 @@ function _forgetElementBindings(element: HTMLElement, fn: ActivateEventListener)
 	boundEvents.delete(element);
 }
 
-function _getElementBindings(element: HTMLElement, fn: ActivateEventListener) {
+/**
+ * Return the bindings for a particular element and primary binding pair.
+ *
+ * @param {HTMLElement} element
+ * @param {ActivateEventListener} fn
+ */
+function _getElementBindings(element: HTMLElement, fn: ActivateEventListener): ActivateBinding | undefined {
 	const elementB = boundEvents.get(element);
 
 	if (!elementB) {
@@ -179,30 +201,50 @@ function _getElementBindings(element: HTMLElement, fn: ActivateEventListener) {
 	return fnB;
 }
 
-function _getElementHasBindings(element: HTMLElement) {
+/**
+ * Checks whether or not any bindings are recorded for a particular element and primary binding pair.
+ *
+ * @param  {HTMLElement} element
+ *
+ * @return {boolean}
+ */
+function _getElementHasBindings(element: HTMLElement): boolean {
 	return boundEvents.has(element);
 }
 
 function _makeEnterFn(fn: ActivateEventListener) {
-	return function (this: HTMLElement, e: KeyboardEvent) {
+	return function (this: HTMLElement, e: KeyboardEvent): any {
 		const isEnter = _isEnter(e);
 
 		if (isEnter) {
-			fn.call(this, e);
+			return fn.call(this, e);
 		}
 	};
 }
 
-function _isEnter(e: KeyboardEvent) {
+/**
+ * For a given KeyboardEvent, checks if it was triggered by the 'enter' key.
+ *
+ * @param  {KeyboardEvent} e
+ *
+ * @return {boolean}
+ */
+function _isEnter(e: KeyboardEvent): boolean {
 	const isEnter = !!(e.key && (e.key.toLowerCase() === 'enter'));
 
 	return isEnter;
 }
 
-function _preventSpacebarScroll(e: KeyboardEvent) {
+/**
+ * For a given KeyboardEvent, if it was triggered by the 'spacebar' key, prevent the default action of scrolling the page.
+ *
+ * @param {KeyboardEvent} e
+ */
+function _preventSpacebarScroll(this: HTMLElement, e: KeyboardEvent): void {
 	// Prevent spacebar from scrolling the page down on keydown
-	const element = e.target;
+	const element = this;
 
+	// Buttons and inputs don't have this default action of the 'spacebar' key, so don't prevent it.
 	const isButton = element instanceof HTMLButtonElement;
 	const isInput = element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement;
 
@@ -213,22 +255,63 @@ function _preventSpacebarScroll(e: KeyboardEvent) {
 	}
 }
 
+/**
+ * Create a secondary binding that calls fn when triggered via the spacebar.
+ *
+ * @param {ActivateEventListener} fn
+ */
 function _makeSpacebarFn(fn: ActivateEventListener) {
-	return function (this: HTMLElement, e: KeyboardEvent) {
+	return function (this: HTMLElement, e: KeyboardEvent): any {
 		const isSpacebar = _isSpacebar(e);
 
 		if (isSpacebar) {
-			fn.call(this, e);
+			return fn.call(this, e);
 		}
 	};
 }
 
-function _isSpacebar(e: KeyboardEvent) {
+/**
+ * Checks if a given KeyboardEvent was triggered by the 'spacebar' key.
+ *
+ * @param  {KeyboardEvent} e
+ *
+ * @return {boolean}
+ */
+function _isSpacebar(e: KeyboardEvent): boolean {
 	// IE11 uses 'spacebar' instead of ' '
 	const isSpacebar = !!(e.key && (e.key === ' ' || e.key.toLowerCase() === 'spacebar'));
 
 	return isSpacebar;
 }
 
-export { activate, deactivate };
+/**
+ * Bind fn to all specified elements.
+ *
+ * @param {string | HTMLElement | NodeListOf<HTMLElement>} elements - The elements to have fn bound to them.
+ * @param {ActivateEventListener} fn - The event listener to bind.
+ *
+ * @throws {DOMException} - If the elements argument is an invalid CSS selector string.
+ */
+function activate(elements: string | HTMLElement | NodeListOf<HTMLElement>, fn: ActivateEventListener): void {
+	_activator(elements, fn, _activateSingle);
+}
+
+/**
+ * Unbind fn from all specified elements.
+ *
+ * @param {string | HTMLElement | NodeListOf<HTMLElement>} elements - The elements to have fn unbound from them.
+ * @param {ActivateEventListener} fn - The event listener to unbind.
+ *
+ * @throws {DOMException} - If the elements argument is an invalid CSS selector string.
+ */
+function deactivate(elements: string | HTMLElement | NodeListOf<HTMLElement>, fn: ActivateEventListener): void {
+	_activator(elements, fn, _deactivateSingle);
+}
+
+export {
+	activate,
+	deactivate,
+
+	ActivateEventListener,
+};
 export default activate;
